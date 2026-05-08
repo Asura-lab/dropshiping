@@ -1,0 +1,209 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  phone     String   @unique
+  name      String
+  email     String?
+  role      String   @default("customer") // customer | driver | admin
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  addresses   Address[]
+  orders      Order[]
+  deliveries  Delivery[]     @relation("DriverDeliveries")
+  statusLogs  OrderStatusLog[] @relation("StatusChanger")
+
+  @@index([phone])
+  @@index([role])
+  @@map("users")
+}
+
+model Address {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label     String?
+  duureg    String
+  khoroo    String
+  gudamj    String?
+  bair      String?
+  toot      String?
+  note      String?
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  orders    Order[]
+
+  @@index([userId])
+  @@map("addresses")
+}
+
+model Product {
+  id               String   @id @default(uuid())
+  sourcePlatform   String   // taobao | alibaba | amazon
+  sourceUrl        String
+  sourceId         String
+  titleMn          String
+  titleOriginal    String
+  descriptionMn    String?
+  priceOriginal    Decimal  @db.Decimal(12, 2)
+  currencyOriginal String   // CNY | USD
+  priceMnt         Decimal  @db.Decimal(14, 2)
+  customsFee       Decimal  @default(0) @db.Decimal(14, 2)
+  shippingFee      Decimal  @default(0) @db.Decimal(14, 2)
+  images           Json     @default("[]") // [{url, is_primary}]
+  category         String?
+  stockStatus      String   @default("in_stock") // in_stock | out_of_stock | unknown
+  status           String   @default("active")   // active | inactive | deleted
+  syncedAt         DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  orderItems       OrderItem[]
+
+  @@unique([sourcePlatform, sourceId])
+  @@index([status])
+  @@index([sourcePlatform])
+  @@index([category])
+  @@index([priceMnt])
+  @@map("products")
+}
+
+model Order {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  addressId    String?
+  address      Address? @relation(fields: [addressId], references: [id])
+  orderNumber  String   @unique // DS-YYYYMMDD-XXXX
+  status       String   @default("pending")
+  deliveryType String   // pickup | delivery
+  note         String?
+  subtotalMnt  Decimal  @db.Decimal(14, 2)
+  deliveryFee  Decimal  @default(0) @db.Decimal(14, 2)
+  discountMnt  Decimal  @default(0) @db.Decimal(14, 2)
+  totalMnt     Decimal  @db.Decimal(14, 2)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  items        OrderItem[]
+  payment      Payment?
+  delivery     Delivery?
+  statusLogs   OrderStatusLog[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([orderNumber])
+  @@index([createdAt(sort: Desc)])
+  @@map("orders")
+}
+
+model OrderItem {
+  id           String  @id @default(uuid())
+  orderId      String
+  order        Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId    String
+  product      Product @relation(fields: [productId], references: [id])
+  quantity     Int
+  unitPriceMnt Decimal @db.Decimal(14, 2)
+  createdAt    DateTime @default(now())
+
+  sourceOrder  SourceOrder?
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+model SourceOrder {
+  id              String    @id @default(uuid())
+  orderItemId     String    @unique
+  orderItem       OrderItem @relation(fields: [orderItemId], references: [id])
+  platform        String    // taobao | alibaba | amazon
+  platformOrderId String?
+  status          String    @default("queued")
+  retryCount      Int       @default(0)
+  errorMessage    String?
+  rawResponse     Json?
+  placedAt        DateTime?
+  shippedAt       DateTime?
+  arrivedAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([status])
+  @@index([platform])
+  @@map("source_orders")
+}
+
+model OrderStatusLog {
+  id         String   @id @default(uuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id])
+  fromStatus String?
+  toStatus   String
+  changedBy  String?
+  changer    User?    @relation("StatusChanger", fields: [changedBy], references: [id])
+  note       String?
+  createdAt  DateTime @default(now())
+
+  @@index([orderId])
+  @@map("order_status_logs")
+}
+
+model Payment {
+  id         String    @id @default(uuid())
+  orderId    String    @unique
+  order      Order     @relation(fields: [orderId], references: [id])
+  provider   String    // qpay | socialpay
+  externalId String?
+  amountMnt  Decimal   @db.Decimal(14, 2)
+  status     String    @default("pending") // pending | paid | failed | refunded
+  paidAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([status])
+  @@map("payments")
+}
+
+model DeliverySlot {
+  id           String     @id @default(uuid())
+  type         String     // pickup | delivery
+  slotDatetime DateTime
+  capacity     Int        @default(20)
+  bookedCount  Int        @default(0)
+  isActive     Boolean    @default(true)
+
+  deliveries   Delivery[]
+
+  @@index([type, slotDatetime])
+  @@map("delivery_slots")
+}
+
+model Delivery {
+  id           String       @id @default(uuid())
+  orderId      String       @unique
+  order        Order        @relation(fields: [orderId], references: [id])
+  slotId       String
+  slot         DeliverySlot @relation(fields: [slotId], references: [id])
+  driverId     String?
+  driver       User?        @relation("DriverDeliveries", fields: [driverId], references: [id])
+  status       String       @default("scheduled")
+  trackingCode String?
+  note         String?
+  deliveredAt  DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([driverId])
+  @@index([status])
+  @@map("deliveries")
+}

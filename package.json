@@ -1,0 +1,39 @@
+{
+  "name": "dropshipping",
+  "private": true,
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "type-check": "turbo type-check",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.4",
+    "prettier": "^3.5.3",
+    "eslint": "^9.27.0",
+    "@typescript-eslint/eslint-plugin": "^8.32.0",
+    "@typescript-eslint/parser": "^8.32.0",
+    "typescript": "^5.8.3",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.1"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "npm@10.8.2",
+  "lint-staged": {
+    "**/*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "**/*.{js,jsx,json,md,css}": [
+      "prettier --write"
+    ]
+  }
+}

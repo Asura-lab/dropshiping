@@ -1,0 +1,11 @@
+node_modules/
+dist/
+build/
+out/
+.next/
+.output/
+*.tsbuildinfo
+next-env.d.ts
+prisma/migrations/
+.turbo/
+coverage/

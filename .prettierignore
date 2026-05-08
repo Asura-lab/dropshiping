@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.output/
+
+# Generated files
+*.tsbuildinfo
+next-env.d.ts
+
+# Prisma — keep schema formatted, ignore generated client & migrations
+prisma/migrations/
+
+# Turbo cache
+.turbo/
+
+# Logs & temp
+*.log
+*.tmp
+coverage/

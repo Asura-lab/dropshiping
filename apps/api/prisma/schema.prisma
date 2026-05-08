@@ -1,0 +1,2 @@
+// This file intentionally left as pointer.
+// Use: npx prisma generate --schema=../../prisma/schema.prisma
