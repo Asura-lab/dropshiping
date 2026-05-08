@@ -1,7 +1,12 @@
-import express from "express";
+import express, { type Request, type Response } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
+
+import authRouter from "./routes/auth";
+import productsRouter from "./routes/products";
+import usersRouter from "./routes/users";
+import adminProductsRouter from "./routes/admin/products";
 
 const app = express();
 
@@ -17,13 +22,13 @@ app.use(
   })
 );
 
-app.get("/health", (_req, res) => {
+app.get("/health", (_req: Request, res: Response) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-// Routes will be registered here in Week 3-4
-// app.use("/v1/auth", authRouter);
-// app.use("/v1/products", productsRouter);
-// app.use("/v1/orders", ordersRouter);
+app.use("/v1/auth", authRouter);
+app.use("/v1/products", productsRouter);
+app.use("/v1/users", usersRouter);
+app.use("/v1/admin/products", adminProductsRouter);
 
 export default app;
