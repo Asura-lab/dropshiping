@@ -6,7 +6,13 @@ import { rateLimit } from "express-rate-limit";
 import authRouter from "./routes/auth";
 import productsRouter from "./routes/products";
 import usersRouter from "./routes/users";
+import ordersRouter from "./routes/orders";
+import paymentsRouter from "./routes/payments";
+import deliverySlotsRouter from "./routes/delivery-slots";
 import adminProductsRouter from "./routes/admin/products";
+import adminOrdersRouter from "./routes/admin/orders";
+import adminDeliverySlotsRouter from "./routes/admin/delivery-slots";
+import adminUploadRouter from "./routes/admin/upload";
 
 const app = express();
 
@@ -29,6 +35,12 @@ app.get("/health", (_req: Request, res: Response) => {
 app.use("/v1/auth", authRouter);
 app.use("/v1/products", productsRouter);
 app.use("/v1/users", usersRouter);
+app.use("/v1/orders", ordersRouter);
+app.use("/v1/payments", paymentsRouter);
+app.use("/v1/delivery-slots", deliverySlotsRouter);
 app.use("/v1/admin/products", adminProductsRouter);
+app.use("/v1/admin/orders", adminOrdersRouter);
+app.use("/v1/admin/delivery-slots", adminDeliverySlotsRouter);
+app.use("/v1/admin/upload", adminUploadRouter);
 
 export default app;

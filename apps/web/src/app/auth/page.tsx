@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { useToast } from "@/components/ui/Toast";
+import { getUser } from "@/lib/api";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/v1";
 
@@ -25,6 +26,10 @@ export default function AuthPage() {
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
   ];
+
+  useEffect(() => {
+    if (getUser()) router.replace("/account");
+  }, [router]);
 
   useEffect(() => {
     if (countdown > 0) {
@@ -49,7 +54,7 @@ export default function AuthPage() {
       if (!data.success) throw new Error(data.error?.message);
       setStep("otp");
       setCountdown(data.data.expires_in as number);
-      setTimeout(() => otpRefs[0].current?.focus(), 100);
+      setTimeout(() => otpRefs[0]?.current?.focus(), 100);
     } catch (e) {
       show(e instanceof Error ? e.message : "Алдаа гарлаа", "error");
     } finally {
@@ -100,7 +105,7 @@ export default function AuthPage() {
     } catch (e) {
       show(e instanceof Error ? e.message : "OTP буруу байна", "error");
       setOtp(["", "", "", ""]);
-      otpRefs[0].current?.focus();
+      otpRefs[0]?.current?.focus();
     } finally {
       setLoading(false);
     }

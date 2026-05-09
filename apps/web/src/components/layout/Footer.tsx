@@ -2,9 +2,9 @@ export function Footer() {
   return (
     <footer
       style={{
-        borderTop: "1px solid var(--color-border)",
-        background: "var(--color-surface)",
-        padding: "32px 24px",
+        borderTop: "1px solid var(--line)",
+        background: "var(--bg-paper)",
+        padding: "24px 20px",
         marginTop: "auto",
       }}
     >
@@ -15,12 +15,23 @@ export function Footer() {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          fontSize: "13px",
-          color: "var(--color-text-hint)",
+          gap: 16,
+          flexWrap: "wrap",
         }}
       >
-        <span>© 2026 Дэлгүүр. Бүх эрх хуулиар хамгаалагдсан.</span>
-        <span>Монгол Улс</span>
+        <span style={{ fontSize: 12, color: "var(--mute)", letterSpacing: "0.02em" }}>
+          © 2026 SHUUD. Бүх эрх хуулиар хамгаалагдсан.
+        </span>
+        <span
+          style={{
+            fontSize: 11,
+            color: "var(--mute-2)",
+            letterSpacing: "0.06em",
+            textTransform: "uppercase",
+          }}
+        >
+          Монгол Улс
+        </span>
       </div>
     </footer>
   );

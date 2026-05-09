@@ -1,5 +1,4 @@
 import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
@@ -61,12 +60,7 @@ async function main() {
       priceMnt: 38500,
       customsFee: 0,
       shippingFee: 8000,
-      images: [
-        {
-          url: "https://placehold.co/400x400?text=Charger",
-          is_primary: true,
-        },
-      ],
+      images: [{ url: "https://placehold.co/400x400?text=Charger", is_primary: true }],
       category: "Электроник",
     },
     {
@@ -111,30 +105,40 @@ async function main() {
     });
   }
 
-  // Delivery slots (pickup) — next 7 days
+  // Delivery slots — next 7 days, pickup + delivery, skip existing
   const now = new Date();
+  let slotCreated = 0;
   for (let day = 1; day <= 7; day++) {
-    const date = new Date(now);
-    date.setDate(date.getDate() + day);
-    for (const hour of [10, 14, 16]) {
-      const slotTime = new Date(date);
-      slotTime.setHours(hour, 0, 0, 0);
-      await prisma.deliverySlot.create({
-        data: {
-          type: "pickup",
-          slotDatetime: slotTime,
-          capacity: 20,
-          bookedCount: 0,
-          isActive: true,
-        },
-      });
+    for (const hour of [10, 14, 18]) {
+      for (const type of ["pickup", "delivery"]) {
+        const slotTime = new Date(now);
+        slotTime.setDate(slotTime.getDate() + day);
+        slotTime.setHours(hour, 0, 0, 0);
+
+        const exists = await prisma.deliverySlot.findFirst({
+          where: { type, slotDatetime: slotTime },
+        });
+        if (!exists) {
+          await prisma.deliverySlot.create({
+            data: {
+              type,
+              slotDatetime: slotTime,
+              capacity: type === "pickup" ? 30 : 20,
+              bookedCount: 0,
+              isActive: true,
+            },
+          });
+          slotCreated++;
+        }
+      }
     }
   }
 
   console.log("Seed complete.");
-  console.log(`  Admin:    ${admin.phone}`);
-  console.log(`  Customer: ${customer.phone}`);
-  console.log(`  Products: ${products.length}`);
+  console.log(`  Admin:          ${admin.phone}`);
+  console.log(`  Customer:       ${customer.phone}`);
+  console.log(`  Products:       ${products.length}`);
+  console.log(`  Delivery slots: ${slotCreated} created`);
 }
 
 main()
