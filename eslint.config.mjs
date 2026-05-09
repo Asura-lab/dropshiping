@@ -4,7 +4,19 @@ import tsParser from "@typescript-eslint/parser";
 /** @type {import("eslint").Linter.Config[]} */
 export default [
   {
-    ignores: ["**/node_modules/**", "**/dist/**", "**/.next/**", "**/.turbo/**"],
+    ignores: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/out/**",
+      "**/.next/**",
+      "**/.output/**",
+      "**/.turbo/**",
+      "**/coverage/**",
+      "**/*.tsbuildinfo",
+      "**/next-env.d.ts",
+      "**/prisma/migrations/**",
+    ],
   },
   {
     files: ["**/*.ts", "**/*.tsx"],
