@@ -3,9 +3,9 @@ services:
     image: postgres:16-alpine
     container_name: dropshipping_postgres
     environment:
-      POSTGRES_USER: dropship
-      POSTGRES_PASSWORD: dropship_dev
-      POSTGRES_DB: dropshipping_dev
+      POSTGRES_USER: ${POSTGRES_USER:-dropship}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dropship_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-dropshipping_dev}
     ports:
       - "5432:5432"
     volumes:
