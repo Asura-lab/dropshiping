@@ -6,11 +6,19 @@ import { startSmsWorker } from "./workers/sms.worker";
 const PORT = process.env.PORT ?? 4000;
 
 async function main() {
-  await connectRedis();
-  startSmsWorker();
-  app.listen(PORT, () => {
-    console.log(`API server running on http://localhost:${PORT}`);
+  await new Promise<void>((resolve) => {
+    app.listen(PORT, () => {
+      console.log(`API server running on http://localhost:${PORT}`);
+      resolve();
+    });
   });
+
+  try {
+    await connectRedis();
+    startSmsWorker();
+  } catch (err) {
+    console.error("Redis unavailable, SMS worker disabled:", err);
+  }
 }
 
 main().catch((err) => {
