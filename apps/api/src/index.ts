@@ -4,6 +4,9 @@ import path from "path";
 import app from "./app";
 import { connectRedis } from "./lib/redis";
 import { startSmsWorker } from "./workers/sms.worker";
+import { startExchangeRateWorker } from "./workers/exchange-rate.worker";
+import { startScraperWorker } from "./workers/scraper.worker";
+import { startSourceOrderWorker } from "./workers/source-order.worker";
 
 const PORT = process.env.PORT ?? 4000;
 
@@ -29,8 +32,11 @@ async function main() {
   try {
     await connectRedis();
     startSmsWorker();
+    startExchangeRateWorker();
+    startScraperWorker();
+    startSourceOrderWorker();
   } catch (err) {
-    console.error("Redis unavailable, SMS worker disabled:", err);
+    console.error("Redis unavailable, workers disabled:", err);
   }
 }
 

@@ -13,11 +13,18 @@ import adminProductsRouter from "./routes/admin/products";
 import adminOrdersRouter from "./routes/admin/orders";
 import adminDeliverySlotsRouter from "./routes/admin/delivery-slots";
 import adminUploadRouter from "./routes/admin/upload";
+import adminSourceOrdersRouter from "./routes/admin/source-orders";
+import adminReportsRouter from "./routes/admin/reports";
+import driverRouter from "./routes/driver";
+import sourceOrdersWebhookRouter from "./routes/internal/source-orders-webhook";
 
 const app = express();
 
 app.use(helmet());
-app.use(cors({ origin: process.env.FRONTEND_URL ?? "http://localhost:3000" }));
+const allowedOrigins = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(",").map((s) => s.trim())
+  : ["http://localhost:3000", "http://localhost:3500"];
+app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 app.use(
   rateLimit({
@@ -42,5 +49,9 @@ app.use("/v1/admin/products", adminProductsRouter);
 app.use("/v1/admin/orders", adminOrdersRouter);
 app.use("/v1/admin/delivery-slots", adminDeliverySlotsRouter);
 app.use("/v1/admin/upload", adminUploadRouter);
+app.use("/v1/admin/source-orders", adminSourceOrdersRouter);
+app.use("/v1/admin/reports", adminReportsRouter);
+app.use("/v1/driver", driverRouter);
+app.use("/v1/internal/source-orders/webhook", sourceOrdersWebhookRouter);
 
 export default app;

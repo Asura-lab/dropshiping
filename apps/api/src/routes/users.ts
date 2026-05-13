@@ -10,12 +10,10 @@ router.use(requireAuth("customer", "driver", "admin"));
 router.get("/me", async (req: AuthRequest, res) => {
   const user = await prisma.user.findUnique({ where: { id: req.user!.sub } });
   if (!user) {
-    res
-      .status(404)
-      .json({
-        success: false,
-        error: { code: "USER_NOT_FOUND", message: "Хэрэглэгч олдсонгүй" },
-      });
+    res.status(404).json({
+      success: false,
+      error: { code: "USER_NOT_FOUND", message: "Хэрэглэгч олдсонгүй" },
+    });
     return;
   }
   res.json({
@@ -36,12 +34,10 @@ router.patch("/me", async (req: AuthRequest, res) => {
     .object({ name: z.string().min(1).optional(), email: z.string().email().optional() })
     .safeParse(req.body);
   if (!result.success) {
-    res
-      .status(422)
-      .json({
-        success: false,
-        error: { code: "VALIDATION_ERROR", message: "Өгөгдөл буруу" },
-      });
+    res.status(422).json({
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Өгөгдөл буруу" },
+    });
     return;
   }
   const { name, email } = result.data;
@@ -79,12 +75,10 @@ const addressSchema = z.object({
 router.post("/me/addresses", async (req: AuthRequest, res) => {
   const result = addressSchema.safeParse(req.body);
   if (!result.success) {
-    res
-      .status(422)
-      .json({
-        success: false,
-        error: { code: "VALIDATION_ERROR", message: "Хаяг буруу" },
-      });
+    res.status(422).json({
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Хаяг буруу" },
+    });
     return;
   }
   const { is_default, ...data } = result.data;
@@ -114,12 +108,10 @@ router.post("/me/addresses", async (req: AuthRequest, res) => {
 router.patch("/me/addresses/:id", async (req: AuthRequest, res) => {
   const result = addressSchema.partial().safeParse(req.body);
   if (!result.success) {
-    res
-      .status(422)
-      .json({
-        success: false,
-        error: { code: "VALIDATION_ERROR", message: "Хаяг буруу" },
-      });
+    res.status(422).json({
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Хаяг буруу" },
+    });
     return;
   }
   const existing = await prisma.address.findFirst({
@@ -152,6 +144,23 @@ router.patch("/me/addresses/:id", async (req: AuthRequest, res) => {
     data: updateData,
   });
   res.json({ success: true, data: address });
+});
+
+// POST /users/me/push-token — store Expo push token
+router.post("/me/push-token", async (req: AuthRequest, res) => {
+  const result = z.object({ token: z.string().min(1) }).safeParse(req.body);
+  if (!result.success) {
+    res.status(422).json({
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "token шаардлагатай" },
+    });
+    return;
+  }
+  await prisma.user.update({
+    where: { id: req.user!.sub },
+    data: { pushToken: result.data.token },
+  });
+  res.json({ success: true, data: null });
 });
 
 // DELETE /users/me/addresses/:id

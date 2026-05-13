@@ -76,8 +76,8 @@ function Icon({
   }
 }
 
-// ---- SHUUD Logo -------------------------------------------------------
-function ShuudLogo({ size = 16 }: { size?: number }) {
+// ---- OmniFlow Logo -------------------------------------------------------
+function OmniFlowLogo({ size = 16 }: { size?: number }) {
   return (
     <span
       style={{
@@ -112,7 +112,7 @@ function ShuudLogo({ size = 16 }: { size?: number }) {
           textTransform: "uppercase",
         }}
       >
-        SHUUD
+        OmniFlow
       </span>
     </span>
   );
@@ -197,7 +197,7 @@ export function Navbar() {
           }}
         >
           <Link href="/">
-            <ShuudLogo size={17} />
+            <OmniFlowLogo size={17} />
           </Link>
 
           {/* Desktop nav */}

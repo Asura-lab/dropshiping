@@ -27,12 +27,10 @@ router.get("/", async (req, res) => {
     .safeParse(req.query);
 
   if (!query.success) {
-    res
-      .status(422)
-      .json({
-        success: false,
-        error: { code: "VALIDATION_ERROR", message: "Query буруу" },
-      });
+    res.status(422).json({
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Query буруу" },
+    });
     return;
   }
 
@@ -81,12 +79,10 @@ router.patch("/:id/status", async (req: AuthRequest, res) => {
 
   const order = await prisma.order.findUnique({ where: { id: String(req.params.id) } });
   if (!order) {
-    res
-      .status(404)
-      .json({
-        success: false,
-        error: { code: "NOT_FOUND", message: "Захиалга олдсонгүй" },
-      });
+    res.status(404).json({
+      success: false,
+      error: { code: "NOT_FOUND", message: "Захиалга олдсонгүй" },
+    });
     return;
   }
 
@@ -157,12 +153,10 @@ router.get("/:id", async (_req, res) => {
   });
 
   if (!order) {
-    res
-      .status(404)
-      .json({
-        success: false,
-        error: { code: "NOT_FOUND", message: "Захиалга олдсонгүй" },
-      });
+    res.status(404).json({
+      success: false,
+      error: { code: "NOT_FOUND", message: "Захиалга олдсонгүй" },
+    });
     return;
   }
 
@@ -188,12 +182,10 @@ router.post("/", async (req: AuthRequest, res) => {
 
   const result = schema.safeParse(req.body);
   if (!result.success) {
-    res
-      .status(422)
-      .json({
-        success: false,
-        error: { code: "VALIDATION_ERROR", message: result.error.errors[0]?.message },
-      });
+    res.status(422).json({
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: result.error.errors[0]?.message },
+    });
     return;
   }
 
@@ -201,12 +193,10 @@ router.post("/", async (req: AuthRequest, res) => {
 
   const user = await prisma.user.findUnique({ where: { phone: user_phone } });
   if (!user) {
-    res
-      .status(404)
-      .json({
-        success: false,
-        error: { code: "USER_NOT_FOUND", message: "Хэрэглэгч олдсонгүй" },
-      });
+    res.status(404).json({
+      success: false,
+      error: { code: "USER_NOT_FOUND", message: "Хэрэглэгч олдсонгүй" },
+    });
     return;
   }
 
@@ -214,12 +204,10 @@ router.post("/", async (req: AuthRequest, res) => {
     where: { id: slot_id, isActive: true },
   });
   if (!slot || slot.bookedCount >= slot.capacity) {
-    res
-      .status(422)
-      .json({
-        success: false,
-        error: { code: "SLOT_UNAVAILABLE", message: "Цаг боломжгүй" },
-      });
+    res.status(422).json({
+      success: false,
+      error: { code: "SLOT_UNAVAILABLE", message: "Цаг боломжгүй" },
+    });
     return;
   }
 
@@ -228,12 +216,10 @@ router.post("/", async (req: AuthRequest, res) => {
     where: { id: { in: productIds }, status: "active" },
   });
   if (products.length !== productIds.length) {
-    res
-      .status(422)
-      .json({
-        success: false,
-        error: { code: "PRODUCT_NOT_FOUND", message: "Зарим бараа олдсонгүй" },
-      });
+    res.status(422).json({
+      success: false,
+      error: { code: "PRODUCT_NOT_FOUND", message: "Зарим бараа олдсонгүй" },
+    });
     return;
   }
 
@@ -302,9 +288,29 @@ router.post("/", async (req: AuthRequest, res) => {
   res.status(201).json({ success: true, data: order });
 });
 
-// DELETE /admin/orders/:id — soft delete (cancel)
-router.delete("/:id", async (req: AuthRequest, res) => {
-  const order = await prisma.order.findUnique({ where: { id: String(req.params.id) } });
+// PATCH /admin/orders/:id/delivery/assign — assign driver
+router.patch("/:id/delivery/assign", async (req: AuthRequest, res) => {
+  const result = z.object({ driverId: z.string().uuid() }).safeParse(req.body);
+  if (!result.success) {
+    res
+      .status(422)
+      .json({
+        success: false,
+        error: { code: "VALIDATION_ERROR", message: "driverId шаардлагатай" },
+      });
+    return;
+  }
+
+  const { driverId } = result.data;
+
+  const [order, driver] = await Promise.all([
+    prisma.order.findUnique({
+      where: { id: String(req.params.id) },
+      include: { delivery: true },
+    }),
+    prisma.user.findFirst({ where: { id: driverId, role: "driver", isActive: true } }),
+  ]);
+
   if (!order) {
     res
       .status(404)
@@ -312,6 +318,54 @@ router.delete("/:id", async (req: AuthRequest, res) => {
         success: false,
         error: { code: "NOT_FOUND", message: "Захиалга олдсонгүй" },
       });
+    return;
+  }
+  if (!order.delivery) {
+    res
+      .status(422)
+      .json({
+        success: false,
+        error: { code: "NO_DELIVERY", message: "Хүргэлт тохируулагдаагүй" },
+      });
+    return;
+  }
+  if (!driver) {
+    res
+      .status(404)
+      .json({
+        success: false,
+        error: { code: "DRIVER_NOT_FOUND", message: "Жолооч олдсонгүй" },
+      });
+    return;
+  }
+
+  const delivery = await prisma.delivery.update({
+    where: { id: order.delivery.id },
+    data: { driverId },
+    include: { driver: { select: { id: true, name: true, phone: true } } },
+  });
+
+  res.json({ success: true, data: delivery });
+});
+
+// GET /admin/drivers — list active drivers
+router.get("/drivers/list", async (_req, res) => {
+  const drivers = await prisma.user.findMany({
+    where: { role: "driver", isActive: true },
+    select: { id: true, name: true, phone: true },
+    orderBy: { name: "asc" },
+  });
+  res.json({ success: true, data: drivers });
+});
+
+// DELETE /admin/orders/:id — soft delete (cancel)
+router.delete("/:id", async (req: AuthRequest, res) => {
+  const order = await prisma.order.findUnique({ where: { id: String(req.params.id) } });
+  if (!order) {
+    res.status(404).json({
+      success: false,
+      error: { code: "NOT_FOUND", message: "Захиалга олдсонгүй" },
+    });
     return;
   }
   await prisma.$transaction([

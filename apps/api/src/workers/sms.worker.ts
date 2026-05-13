@@ -1,10 +1,12 @@
 import { Worker, type Job } from "bullmq";
 import type { SmsJobData } from "../lib/queue";
+import { prisma } from "../lib/prisma";
+import { sendPushToToken } from "../lib/push";
 
 const SMS_TEMPLATES: Record<string, (data: SmsJobData) => string> = {
   order_confirmed: (d) => {
     const j = d as Extract<SmsJobData, { type: "order_confirmed" }>;
-    return `SHUUD: Таны ${j.orderNumber} дугаартай захиалга баталгаажлаа. Дэлгэрэнгүйг апп-аас харна уу.`;
+    return `OmniFlow: Таны ${j.orderNumber} дугаартай захиалга баталгаажлаа. Дэлгэрэнгүйг апп-аас харна уу.`;
   },
   order_ready_pickup: (d) => {
     const j = d as Extract<SmsJobData, { type: "order_ready_pickup" }>;
@@ -14,7 +16,7 @@ const SMS_TEMPLATES: Record<string, (data: SmsJobData) => string> = {
       hour: "2-digit",
       minute: "2-digit",
     });
-    return `SHUUD: ${j.orderNumber} захиалга авахад бэлэн боллоо. Авах цаг: ${time}`;
+    return `OmniFlow: ${j.orderNumber} захиалга авахад бэлэн боллоо. Авах цаг: ${time}`;
   },
   slot_reminder: (d) => {
     const j = d as Extract<SmsJobData, { type: "slot_reminder" }>;
@@ -22,7 +24,15 @@ const SMS_TEMPLATES: Record<string, (data: SmsJobData) => string> = {
       hour: "2-digit",
       minute: "2-digit",
     });
-    return `SHUUD: Сануулга — ${j.orderNumber} захиалгаа өнөөдөр ${time} цагт авна уу.`;
+    return `OmniFlow: Сануулга — ${j.orderNumber} захиалгаа өнөөдөр ${time} цагт авна уу.`;
+  },
+  source_order_failed: (d) => {
+    const j = d as Extract<SmsJobData, { type: "source_order_failed" }>;
+    return `OmniFlow [Админ]: ${j.orderNumber} захиалгын гадаад platform захиалга бүтэлгүйтлээ. Шалгана уу.`;
+  },
+  arrived_warehouse: (d) => {
+    const j = d as Extract<SmsJobData, { type: "arrived_warehouse" }>;
+    return `OmniFlow: Таны ${j.orderNumber} дугаартай захиалга агуулахад ирлээ. Удахгүй хүргэлтэд/авалтад бэлэн болно.`;
   },
 };
 
@@ -43,7 +53,7 @@ async function sendSms(phone: string, message: string) {
     body: JSON.stringify({
       phone,
       message,
-      from: process.env.SMS_SENDER_ID ?? "SHUUD",
+      from: process.env.SMS_SENDER_ID ?? "OmniFlow",
     }),
   });
 
@@ -51,6 +61,14 @@ async function sendSms(phone: string, message: string) {
     throw new Error(`SMS API error: ${res.status}`);
   }
 }
+
+const PUSH_TITLES: Record<string, string> = {
+  order_confirmed: "Захиалга баталгаажлаа ✅",
+  order_ready_pickup: "Захиалга авахад бэлэн боллоо 🏪",
+  slot_reminder: "Захиалга авах цаг ойртлоо ⏰",
+  source_order_failed: "Захиалгын алдаа ⚠️",
+  arrived_warehouse: "Захиалга агуулахад ирлээ 📦",
+};
 
 export function startSmsWorker() {
   const worker = new Worker<SmsJobData>(
@@ -63,7 +81,20 @@ export function startSmsWorker() {
         return;
       }
       const message = template(data);
-      await sendSms(data.phone, message);
+
+      // Send SMS and push notification concurrently
+      const user = await prisma.user.findFirst({
+        where: { phone: data.phone },
+        select: { pushToken: true },
+      });
+
+      await Promise.allSettled([
+        sendSms(data.phone, message),
+        sendPushToToken(user?.pushToken, PUSH_TITLES[data.type] ?? "OmniFlow", message, {
+          type: data.type,
+          orderNumber: "orderNumber" in data ? data.orderNumber : undefined,
+        }),
+      ]);
     },
     {
       connection: { url: process.env.REDIS_URL ?? "redis://localhost:6379" },

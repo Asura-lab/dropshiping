@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import ProductList from "./ProductList";
 
-export const metadata = { title: "Бараа — SHUUD" };
+export const metadata = { title: "Бараа — OmniFlow" };
 
 export default function ProductsPage() {
   return (

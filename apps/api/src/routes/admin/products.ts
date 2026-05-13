@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../../lib/prisma";
 import { requireAuth } from "../../middleware/auth";
+import { enqueueScrape } from "../../lib/queue";
 
 const router = Router();
 router.use(requireAuth("admin"));
@@ -38,12 +39,10 @@ router.get("/", async (_req, res) => {
 router.post("/", async (req, res) => {
   const result = productSchema.safeParse(req.body);
   if (!result.success) {
-    res
-      .status(422)
-      .json({
-        success: false,
-        error: { code: "VALIDATION_ERROR", message: result.error.errors[0]?.message },
-      });
+    res.status(422).json({
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: result.error.errors[0]?.message },
+    });
     return;
   }
   const d = result.data;
@@ -72,12 +71,10 @@ router.post("/", async (req, res) => {
 router.patch("/:id", async (req, res) => {
   const result = productSchema.partial().safeParse(req.body);
   if (!result.success) {
-    res
-      .status(422)
-      .json({
-        success: false,
-        error: { code: "VALIDATION_ERROR", message: result.error.errors[0]?.message },
-      });
+    res.status(422).json({
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: result.error.errors[0]?.message },
+    });
     return;
   }
   const existing = await prisma.product.findUnique({ where: { id: req.params.id } });
@@ -108,6 +105,36 @@ router.patch("/:id", async (req, res) => {
     data: patch,
   });
   res.json({ success: true, data: product });
+});
+
+// POST /admin/products/scrape — enqueue a scraping job for a product URL
+router.post("/scrape", async (req, res) => {
+  const result = z
+    .object({
+      url: z
+        .string()
+        .url()
+        .refine(
+          (u) =>
+            u.includes("taobao.com") ||
+            u.includes("tmall.com") ||
+            u.includes("alibaba.com") ||
+            u.includes("1688.com"),
+          { message: "Зөвхөн Taobao, Tmall, Alibaba URL дэмжигдэнэ" }
+        ),
+    })
+    .safeParse(req.body);
+
+  if (!result.success) {
+    res.status(422).json({
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: result.error.errors[0]?.message },
+    });
+    return;
+  }
+
+  const jobId = await enqueueScrape({ url: result.data.url });
+  res.status(202).json({ success: true, data: { job_id: jobId, status: "queued" } });
 });
 
 // DELETE /admin/products/:id
