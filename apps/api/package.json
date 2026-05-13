@@ -12,7 +12,9 @@
     "db:migrate": "prisma migrate dev --schema=../../prisma/schema.prisma",
     "db:push": "prisma db push --schema=../../prisma/schema.prisma",
     "db:seed": "tsx ../../prisma/seed.ts",
-    "db:studio": "prisma studio --schema=../../prisma/schema.prisma"
+    "db:studio": "prisma studio --schema=../../prisma/schema.prisma",
+    "test:e2e": "tsx test/e2e.ts",
+    "test:load": "k6 run test/load.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1045.0",

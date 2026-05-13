@@ -1,0 +1,48 @@
+{
+  "cli": {
+    "version": ">= 12.0.0"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": { "simulator": true },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "http://localhost:4000/v1"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": { "buildType": "apk" },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://YOUR_API_URL/v1"
+      }
+    },
+    "production": {
+      "distribution": "store",
+      "ios": {
+        "bundleIdentifier": "mn.omniflow.app"
+      },
+      "android": {
+        "buildType": "app-bundle",
+        "package": "mn.omniflow.app"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://YOUR_API_URL/v1"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "YOUR_APPLE_ID",
+        "ascAppId": "YOUR_APP_STORE_CONNECT_APP_ID",
+        "appleTeamId": "YOUR_TEAM_ID"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./google-play-service-account.json",
+        "track": "production"
+      }
+    }
+  }
+}

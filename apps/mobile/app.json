@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "OmniFlow",
+    "slug": "omniflow",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#f5f4f0"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "mn.omniflow.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#f5f4f0"
+      },
+      "package": "mn.omniflow.app"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#b84a30"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "scheme": "omniflow"
+  }
+}

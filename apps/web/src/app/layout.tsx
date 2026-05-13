@@ -21,7 +21,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SHUUD — Хятадаас Монголд шууд",
+  title: "OmniFlow — Хятадаас Монголд шууд",
   description:
     "Amazon, Taobao, Alibaba-с бараагаа монгол хэлтэй нэг цонхоор захиалаарай.",
 };

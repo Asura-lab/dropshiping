@@ -7,12 +7,13 @@ C:\Users\Acer\Documents\Obsidian Vault\01-Projects\Dropshipping\
 
 ## Баримт бичгүүд
 
-- 00-overview.md — Төслийн тоймо
+- 00-overview.md — Төслийн тойм
 - 01-architecture.md — Архитектур
 - 02-database-schema.md — DB схем + Prisma
 - 03-api-design.md — API endpoints
 - 04-ui-flows.md — UI дэлгэц урсгал
 - 05-phase-plan.md — Хөгжүүлэлтийн төлөвлөгөө
+- 06-deploy-checklist.md — Production deploy алхамууд (API keys, Railway, Vercel, App Store)
 
 ## Claude-д зааварчилгаа
 

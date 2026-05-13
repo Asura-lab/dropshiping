@@ -20,7 +20,7 @@ export function Footer() {
         }}
       >
         <span style={{ fontSize: 12, color: "var(--mute)", letterSpacing: "0.02em" }}>
-          © 2026 SHUUD. Бүх эрх хуулиар хамгаалагдсан.
+          © 2026 OmniFlow. Бүх эрх хуулиар хамгаалагдсан.
         </span>
         <span
           style={{
